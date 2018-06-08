@@ -1,81 +1,63 @@
-// [모의 SW 역량테스트] 등산로 조성
-#include<iostream>
-#include<memory.h>
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
 
-using::std::scanf;
-using::std::printf;
+int N, K, Max;
+int mountain[9][9];
+bool visit[9][9];
+int dx[4] = { -1 ,1 ,0 ,0 };
+int dy[4] = { 0,0,-1,1 };
 
-int map[8][8];
-bool visit[8][8];
-int dx[] = { 1, -1, 0, 0 };
-int dy[] = { 0, 0, 1, -1 };
-int N, K;
-int ans;
-
-void dfs(int x, int y, int dist, int cnt) {
-	if (ans < dist)
-		ans = dist;
-
-	for (int i = 0; i < 4; i++) {
-		int nx = x + dx[i];
-		int ny = y + dy[i];
-		if ((nx >= 0 && nx < N) && (ny >= 0 && ny < N) && visit[nx][ny] == false) {
-			if (map[nx][ny] < map[x][y]) {
-				visit[nx][ny] = true;
-				dfs(nx, ny, dist + 1, cnt);
-				visit[nx][ny] = false;
-			}
-			else {
-				if (cnt == 0 && (map[nx][ny] - K < map[x][y])) {
-					visit[nx][ny] = true;
-					int num = map[nx][ny];
-					map[nx][ny] = map[x][y] - 1;
-					dfs(nx, ny, dist + 1, cnt + 1);
-					map[nx][ny] = num;
-					visit[nx][ny] = false;
+void solution(int count, int row, int col, int pre, bool cut) {
+	visit[row][col] = true;
+	if (Max < count) Max = count;
+	int i, x, y;
+	for (i = 0; i < 4; i++) {
+		x = row + dx[i]; y = col + dy[i];
+		if (visit[x][y]) continue;
+		if (x >= 0 && y >= 0 && x < N && y < N) {
+			if (!cut) {
+				if (!cut && mountain[row][col] > mountain[x][y]) {
+					solution(count + 1, x, y, 0, cut);	// 통과 가능
 				}
+				else if (mountain[row][col] > mountain[x][y] - K) {
+					solution(count + 1, x, y, mountain[row][col] - 1, true);	// 깎기
+				}
+			}
+			else if (pre > mountain[x][y]) {
+				solution(count + 1, x, y, mountain[x][y], cut);	// 통과 가능
 			}
 		}
 	}
-	return;
+	visit[row][col] = false;
 }
 
-int main() {
-	int t;
-	scanf("%d", &t);
+int main()
+{
+	int T;
+	scanf("%d", &T);
 
-	for (int T = 1; T <= t; T++) {
-		memset(map, 0, sizeof(map));
-		memset(visit, false, sizeof(visit));
+	int t, i, j, max;
+	for (t = 1; t <= T; t++) {
+		max = -1;
+		Max = -1;
+		scanf("%d %d", &N, &K);
 
-		scanf("%d", &N);
-		scanf("%d", &K);
-
-		int max = 0;
-
-		for (int i = 0; i < N; i++) {
-			for (int j = 0; j < N; j++) {
-				scanf("%d", &map[i][j]);
-
-				if (map[i][j]>max)
-					max = map[i][j];
+		for (i = 0; i < N; i++) {
+			for (j = 0; j < N; j++) {
+				visit[i][j] = false;
+				scanf("%d", &mountain[i][j]);
+				if (mountain[i][j] > max) max = mountain[i][j];
 			}
 		}
-
-		ans = 0;
-
-		for (int i = 0; i < N; i++) {
-			for (int j = 0; j < N; j++) {
-				if (map[i][j] == max) {
+		for (i = 0; i < N; i++) {
+			for (j = 0; j < N; j++) {
+				if (mountain[i][j] == max) {
 					visit[i][j] = true;
-					dfs(i, j, 1, 0);
+					solution(1, i, j, 20, false);
 					visit[i][j] = false;
 				}
 			}
 		}
-
-		printf("#%d %d\n", T, ans);
+		printf("#%d %d\n", t, Max);
 	}
-
-	return 0;
 }
